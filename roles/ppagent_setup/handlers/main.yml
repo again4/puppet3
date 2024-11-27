@@ -1,0 +1,16 @@
+---
+- name: "Shutdown Puppet agent"
+  ansible.builtin.service:
+    name: puppet
+    state: stopped
+
+- name: "Start Puppet agent"
+  ansible.builtin.service:
+    name: puppet
+    state: started
+    enabled: true
+
+- name: Update cache
+  ansible.builtin.apt:
+    update_cache: true
+    force_apt_get: true

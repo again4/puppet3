@@ -1,0 +1,6 @@
+[main]
+certname = {{ environment_name | replace('_', '-') }}---{{ hostname.stdout | lower }}
+environment = {{ environment_name }}
+masterport = {{ 8140 if groups['puppet-master'][0] is defined else 32126 }}
+server = {{ ppmaster_hostname if groups['puppet-master'][0] is defined else "xtools.synisys.com" }}
+runinterval = {{ runinterval }}

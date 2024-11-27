@@ -1,0 +1,58 @@
+---
+# - name: Populate the mapping
+#   ansible.builtin.set_fact:
+#     puppetmaster_host: "{{ puppetmaster_host | \
+#       combine({ hostvars[groups['puppet-master'][0]].ansible_default_ipv4.address: hostvars[groups['puppet-master'][0]].ansible_hostname}) }}"
+#   run_once: true
+#   when:
+#     - "'puppet-master' not in group_names"
+#     - not local_dns
+
+- name: Create puppet-masters hosts entry
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    line: "{{ ppmaster_ip }} {{ ppmaster_hostname }}"
+    state: present
+  when: "'puppet-master' in groups"
+
+- name: Get server hostname
+  ansible.builtin.command: "hostname"
+  changed_when: false
+  register: hostname
+
+- name: Create files on hosts with group name
+  ansible.builtin.file:
+    path: "/etc/serverrole"
+    state: directory
+    mode: '644'
+  when:
+    - create_roles
+
+- name: Create file
+  become: true
+  ansible.builtin.file:
+    path: "/etc/serverrole/{{ group_names[0] }}"
+    state: touch
+    mode: '0644'
+    modification_time: preserve
+    access_time: preserve
+  when:
+    - create_roles
+
+- name: Copy Puppet Conf file
+  ansible.builtin.template:
+    src: puppet.conf.j2
+    dest: /etc/puppetlabs/puppet/puppet.conf
+    mode: '644'
+  notify:
+    - Shutdown Puppet agent
+    - Start Puppet agent
+
+- name: Add /opt/puppetlabs/bin directory to root's PATH
+  ansible.builtin.lineinfile:
+    path: /root/.bashrc
+    line: 'export PATH="$PATH:/opt/puppetlabs/bin"'
+    create: true
+    state: present
+    mode: '644'
+    insertafter: EOF

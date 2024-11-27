@@ -1,0 +1,29 @@
+- name: Create a output directory recursively
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    recurse: true
+  with_items:
+    - "{{ output_path }}/hieradata/os"
+    - "{{ output_path }}/hieradata/roles"
+    - "{{ output_path }}/hieradata/nodes"
+
+- name: Generate content from Jinja2 template
+  ansible.builtin.template:
+    src: env.j2
+    dest: "/tmp/env"
+
+- name: Check if certs generated
+  ansible.builtin.stat:
+    path: "{{ output_path }}/hieradata/roles/k8s-{{ distribution }}.yaml"
+  register: certs_generated
+
+- name: Generate kube certs
+  community.docker.docker_container:
+    name: kubetool
+    image: registry.synisys.com/infrastructure/kubetool:8.0.7
+    env_file: "/tmp/env"
+    auto_remove: true
+    volumes:
+      - "{{ output_path }}/hieradata:/mnt"
+  when: not certs_generated.stat.exists

@@ -1,0 +1,46 @@
+profile::k8s::k8s_components::env_name: {{ environment_name }}
+profile::k8s::k8s_components::namespace: ["production"]
+####################################################################
+profile::k8s::k8s_components::applogs_pv_size: {{ applogs_pv_size }}
+profile::k8s::k8s_components::documentservice_pv_size: {{ documentservice_pv_size }}
+profile::k8s::k8s_components::userdataservice_pv_size: {{ userdataservice_pv_size }}
+profile::k8s::k8s_components::elasticseasrch_pv_size: {{ elasticseasrch_pv_size }}
+profile::k8s::k8s_components::exportservice_pv_size: {{ exportservice_pv_size }}
+profile::k8s::k8s_components::pageservice_pv_size: {{ pageservice_pv_size }}
+profile::k8s::k8s_components::rabbitmq_pv_size: {{ rabbitmq_pv_size }}
+profile::k8s::k8s_components::redis_pv_size: {{ redis_pv_size }}
+profile::k8s::k8s_components::minio_pv_size: {{ minio_pv_size }}
+profile::k8s::k8s_components::consul_pv_size: {{ consul_pv_size }}
+profile::k8s::k8s_components::vault_pv_size: {{ vault_pv_size }}
+#####################################################################
+profile::k8s::k8s_components::yml_dir: /etc/kubernetes/puppet_managed
+profile::k8s::k8s_components::nfs_server: {{ groups['nfs-server'][0] | default(nfs_storage_ip) }}
+profile::k8s::k8s_components::nfsroot: {{ "/data/" if groups['nfs-server'][0] is defined else "/" }}
+#####################################################################
+profile::k8s::k8s_components::applogs_dir: applogs
+profile::k8s::k8s_components::redis_dir: redis
+profile::k8s::k8s_components::elasticsearch_dir: elasticsearch
+profile::k8s::k8s_components::rabbitmq_dir: rabbitmq
+profile::k8s::k8s_components::documentservice_dir: documentservice
+profile::k8s::k8s_components::userdataservice_dir: userdataservice
+profile::k8s::k8s_components::exportservice_dir: exportservice
+profile::k8s::k8s_components::prometheus_dir: prometheus
+profile::k8s::k8s_components::pageservice_dir: pageservice
+profile::k8s::k8s_components::minio_dir: minio
+profile::k8s::k8s_components::consul_dir: consul
+profile::k8s::k8s_components::vault_dir: vault
+#####################################################################
+profile::k8s::k8s_components::install_consul: {{ install_consul }}
+profile::k8s::k8s_components::install_vault: {{ install_vault }}
+profile::k8s::k8s_components::install_rabbit_redis_exporter: true
+profile::k8s::k8s_components::install_postgres: false
+#####################################################################
+profile::k8s::k8s_components::registry_username: {{ registry_username }}
+profile::k8s::k8s_components::registry_password: {{ registry_password }}
+{% if k8s_nodes | length > 1 %}
+profile::keepalived::init::virtual_ipaddress: {{ k8s_virtual_ip }}
+{% for item in k8s_nodes|dict2items %}
+profile::keepalived::init::master{{ loop.index }}_ipaddress: {{ item.value }}
+{% endfor %}
+{% endif %}
+#####################################################################

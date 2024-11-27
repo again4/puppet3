@@ -1,0 +1,35 @@
+sis_monitoring::deploy_service: true
+sis_monitoring::grafana::grafana_version: {{ grafana_version }}
+sis_monitoring::prometheus::prometheus_version: {{ prometheus_version }}
+sis_monitoring::prometheus::metrics_names: '.*up|service_request_seconds_count|service_response_status_total|service_request_seconds_bucket|node_systemd_unit_state|node_uname_info|node_network_.*|node_memory_.*|node_cpu_.*|node_load.*|node_disk_.*|container_cpu_user_seconds_total|container_memory_usage_bytes|node_filesystem_.*|container_fs_usage_bytes|machine_cpu_cores|container_fs_reads_bytes_total|container_fs_writes_bytes_total|container_cpu_usage_seconds_total|container_memory_cache|container_network_receive_bytes_total|container_network_transmit_bytes_total|coredns_.*|jetty_requests.+|rabbitmq_queue_consumers|dbmon_pg_monitoring_replication_presence|node_systemd_unit_state|process_start_time_seconds|pg_backup_status.*|jvm_gc_collection_seconds_sum|jvm_info|kube_pod_container_status_restarts_total'
+sis_monitoring::prometheus::servers:
+{% for group in groups if group not in groups_to_skip %}
+{% if groups[group] | length == 1 %}
+  {{ group }}: {{ groups[group][0] }}
+{% else %}
+{% for host in groups[group] %}
+  {{ group }}{{ loop.index }}: {{ host }}
+{% endfor %}
+{% endif %}
+{% endfor %}
+{% set total_mem = hostvars[groups['monitoring'][0]].ansible_memtotal_mb | int %}
+{% if inventory_hostname == groups['monitoring'][0] -%}
+  {% set total_mem = ansible_memtotal_mb | int - 2000 %}
+{%- endif %}
+sis_monitoring::logging::monitoring_server: {{ groups['monitoring'][0] }}
+sis_monitoring::prometheus::memory_limit: {{ (total_mem * 0.4 / 1024) | int }}g
+sis_monitoring::exporters::node_exporter_version: {{ node_exporter_version }}
+sis_monitoring::exporters::node_exporter_options:
+- --collector.filesystem.ignored-mount-points "^/(var/lib/(?:docker|kubelet/))|(run/docker/netns/).*"
+sis_monitoring::exporters::cadvisor_version: {{ cadvisor_version }}
+sis_monitoring::exporters::nginx_prom_exporter_version: {{ nginx_prom_exporter_version }}
+sis_monitoring::exporters::elasticsearch_exporter_version: {{ elasticsearch_exporter_version }}
+sis_monitoring::exporters::consul_exporter_version: {{ consul_exporter_version }}
+sis_monitoring::exporters::consulserverip: {{ k8s_nodes.values() | first }}
+sis_monitoring::logging::elk_version: {{ elk_version }}
+sis_monitoring::logging::logstash_version: {{ logstash_version }}
+sis_monitoring::logging::es_java_opts: '-Xmx{{ (total_mem * 0.2 /1024) | round | int }}g -Xms{{ (total_mem * 0.2 /1024) | round | int }}g'
+sis_monitoring::logging::logstash_java_opts: '-Xmx{{ (total_mem * 0.06) | int }}m -Xms{{ (total_mem * 0.06) | int }}m'
+sis_monitoring::logging::elastic_password: '{{ elastic_password }}'
+sis_monitoring::logging::skip_applogs: false
+sis_monitoring::logging::skip_pg_logs: true

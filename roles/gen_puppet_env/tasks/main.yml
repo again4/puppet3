@@ -1,0 +1,52 @@
+---
+- name: Check variables and generate passwords 
+  ansible.builtin.include_tasks: "check_vars.yml"
+
+- name: Get linux distribution name
+  ansible.builtin.set_fact:
+    distribution: "{{ hostvars[groups['k8s-master'][0]].ansible_distribution_file_variety }}"
+
+- name: Create a directory recursively
+  ansible.builtin.file:
+    path: "{{ output_path }}"
+    owner: 999
+    group: 999
+    state: directory
+    recurse: true
+  when: "'puppet-master' in groups"
+
+# - name: Create archive
+#   delegate_to: localhost
+#   become: false
+#   community.general.archive:
+#     path: "{{ role_path }}/files/*"
+#     dest: "{{ playbook_dir }}/prod.tar"
+#     format: tar
+#     mode: '655'
+#   when: "'puppet-master' in groups"
+
+- name: Unpack archive
+  ansible.builtin.unarchive:
+    src: prod.tar
+    dest: "{{ output_path }}/"
+    mode: '755'
+    owner: 999
+    group: 999
+  when: "'puppet-master' in groups"
+
+# - name: Remove archive
+#   delegate_to: localhost
+#   become: false
+#   ansible.builtin.file:
+#     path: "{{ playbook_dir }}/prod.tar"
+#     state: absent
+#   when: "'puppet-master' in groups"
+
+- name: Run kubetool to generate k8s configs
+  ansible.builtin.include_tasks: "kubetool.yml"
+
+- name: Generate rabbit redis password's
+  ansible.builtin.include_tasks: "rabbit-redis-pass.yml"
+
+- name: Generate hiera
+  ansible.builtin.include_tasks: "gen-hiera.yml"

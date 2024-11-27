@@ -1,0 +1,45 @@
+---
+# - name: Install and configure puppet agent
+#   include_tasks: "{{ ansible_distribution_file_variety }}-install.yml"
+
+- name: Create a directory recursively
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: 999
+    group: 999
+    recurse: true
+  with_items:
+    - /opt/puppet/ssl
+    - /opt/puppet/ca
+    - /opt/puppet/code
+    - /opt/puppet/puppetdb-postgres
+    - /opt/puppet/serverdata
+    - /opt/puppet/puppetdb
+
+- name: Install docker-compose
+  ansible.builtin.get_url:
+    url: https://github.com/docker/compose/releases/download/1.25.1-rc1/docker-compose-Linux-x86_64
+    dest: /usr/bin/docker-compose
+    mode: 'u+x,g+x'
+
+- name: Copy compose to dir
+  ansible.builtin.template:
+    src: docker-compose.yaml.j2
+    dest: /opt/puppet/docker-compose.yaml
+    mode: '644'
+  notify:
+    - Start puppet master
+
+- name: Check if Docker Compose is running
+  shell: docker ps | grep puppet
+  register: docker_puppet_status
+  ignore_errors: true
+
+- name: Start puppet master
+  ansible.builtin.command: docker-compose up -d --force-recreate
+  environment:
+    TMPDIR: /var/tmp
+  args:
+    chdir: /opt/puppet
+  when: docker_puppet_status.rc != 0

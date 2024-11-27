@@ -1,0 +1,6 @@
+- name: Start puppet master
+  ansible.builtin.command: docker-compose up -d --force-recreate
+  environment:
+    TMPDIR: /var/tmp
+  args:
+    chdir: /opt/puppet

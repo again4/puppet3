@@ -1,0 +1,53 @@
+profile::os::timezone::timezone: '{{ timezone }}'
+profile::os::second_disk::second_disk_mount_path: /data
+profile::os::second_disk::second_disk_name: /sdb
+ssh::storeconfigs_enabled: false
+ssh::server::options:
+    Port: 22
+    AddressFamily: inet
+    HostKey:
+      - '/etc/ssh/ssh_host_rsa_key'
+      - '/etc/ssh/ssh_host_ecdsa_key'
+      - '/etc/ssh/ssh_host_ed25519_key'
+    SyslogFacility: AUTHPRIV
+    LogLevel: VERBOSE
+    MaxAuthTries: 3
+    AcceptEnv:
+      - LANG
+      - LC_CTYPE
+      - LC_NUMERIC
+      - LC_TIME
+      - LC_COLLATE
+      - LC_MONETARY
+      - LC_MESSAGES
+      - LC_PAPER
+      - LC_NAME
+      - LC_ADDRESS
+      - LC_TELEPHONE
+      - LC_MEASUREMENT
+      - LC_IDENTIFICATION
+      - LC_ALL
+      - LANGUAGE
+      - XMODIFIERS
+    MaxSessions: 4
+    AuthorizedKeysFile: .ssh/authorized_keys
+    IgnoreRhosts: yes
+    PasswordAuthentication: no
+    ChallengeResponseAuthentication: no
+    GSSAPIAuthentication: yes
+    GSSAPICleanupCredentials: no
+    UsePAM: yes
+    X11Forwarding: yes
+{% if distribution == 'Debian' %}
+    Subsystem: sftp /usr/lib/openssh/sftp-server
+{% else %}
+    Subsystem: sftp /usr/libexec/openssh/sftp-server
+{% endif %}
+    PubkeyAuthentication: yes
+    PermitRootLogin: no
+    Banner: /etc/banner
+    Ciphers: 'aes256-ctr,aes192-ctr,aes128-ctr,aes256-gcm@openssh.com,aes128-gcm@openssh.com'
+    MACs: 'hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,hmac-sha2-512,hmac-sha2-256'
+    HostKeyAlgorithms: 'ssh-ed25519,ssh-ed25519-cert-v01@openssh.com,ssh-rsa,ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ssh-rsa-cert-v01@openssh.com,ssh-dss-cert-v01@openssh.com,ecdsa-sha2-nistp256-cert-v01@openssh.com,ecdsa-sha2-nistp384-cert-v01@openssh.com,ecdsa-sha2-nistp521-cert-v01@openssh.com'
+    KexAlgorithms: 'diffie-hellman-group18-sha512,diffie-hellman-group16-sha512,diffie-hellman-group14-sha256'
+    AuthenticationMethods: publickey

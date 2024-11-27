@@ -1,0 +1,30 @@
+- name: Collect facts
+  hosts: all
+  gather_facts: true
+
+
+- name: Install and configure puppet master
+  hosts: puppet-master
+  gather_facts: false
+  become: true
+  roles:
+    - role: docker_setup
+    - role: ppmaster_setup
+    - role: gen_puppet_env
+
+- name: Generate puppet env and configure
+  hosts: localhost
+  gather_facts: false
+  become: false
+  roles:
+    - role: gen_puppet_env
+      when: "'puppet-master' not in groups"
+    - role: post-steps
+
+- name: Install puppet-agents
+  hosts: all
+  strategy: free
+  gather_facts: false
+  become: true
+  roles:
+    - role: ppagent_setup

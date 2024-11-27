@@ -1,0 +1,19 @@
+---
+- name: Check puppet version
+  ansible.builtin.fail:
+    msg:
+      - "puppet agent version {{ puppet_version }} is not valide"
+      - "puppet agent version should be in (6,7)"
+  when:
+    - puppet_version not in ('6','7')
+
+- name: Include distribution dependency variables
+  ansible.builtin.include_vars: "{{ item }}"
+  with_items:
+    - "{{ ansible_distribution_file_variety }}.yml"
+
+- name: Install and configure puppet agent
+  ansible.builtin.include_tasks: "{{ ansible_distribution_file_variety }}-install.yml"
+
+- name: Common tasks
+  ansible.builtin.include_tasks: "roles/ppagent_setup/tasks/common.yml"

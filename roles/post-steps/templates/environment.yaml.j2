@@ -1,0 +1,123 @@
+# Name of the environment, should match environment name in file path.
+name: "production"
+
+# Configuration storage type can be “consul” or “vault”. Defaults to consul.
+configuration_type: "vault"
+
+# Optional, holds consul definition. If configuration_type is consul this is required.
+consul:
+  host: {{ domain }}
+  # defaults to `80`
+  port: 32002
+
+storage:
+  # Optional, holds vault definition. If configuration_type is vault this is required.
+  # If this is present and configuration_type is consul, hal will check if db credentials are present in vault.
+  vault:
+    host: {{ k8s_nodes.values() | first }}
+    port: 32001 # defaults to `8200`
+
+    # there are two types of authentication username/password and secret_id/role_id
+    # if all 4 fields are present username/password will be used
+    username: hal
+    password: "dummy"
+
+    # vault kv store name, defaults to 'kv'
+    kv_name: 'kv'
+    # defaults to `https`
+    protocol: "http"
+
+  # s3 storage (e.g. minio)
+  s3:
+    host: {{ domain }}
+    # Optional, defaults to `80` for http and `443` for https
+    port: 443
+
+    # authentication username/password
+    username: minuser
+    password: bYktrLhX8xmxJqT
+
+    # protocol for s3, defaults to 'http'
+    protocol: https
+
+
+  # Optional. This is the default postgres database, which is used for standard service databases
+  # For more detailed docs see alternative_dbs
+  postgres:
+    host: {{ k8s_nodes.values() | first }}
+    port: 32112
+    username: admin
+    password: {{ postgres_password }}
+    role_user:
+      username: roleadmin
+      password: {{ postgres_vault_password }}
+
+  # Optional, redis configs, used to create redis configurations (consul/vault)
+  redis:
+    # defaults to `redis`
+    host: redis
+    # defaults to `6379`
+    port: 6379
+    # Optional, if not present then nothing will be set in configurations
+    username: "dummy"
+    password: {{ redis_pass }}
+
+migration_designer:
+  username: admin
+  password: "123456"
+
+# Rabbit configs
+# Optional, rabbit configs, used to create rabbit configurations (consul/vault)
+rabbit:
+  # defaults to `rabbitmq`
+  host: rabbitmq
+  # defaults to `5672`
+  port: 5672
+  # defaults to `guest`
+  username: admin
+  # defaults to `guest`
+  password: {{ rabbit_readonly_pass }}
+
+# Elastic search configs. Optional, if not present then hal will not create elastic search configurations
+elastic_search:
+  # defaults to `elasticsearch`
+  host: String,
+  # defaults to `9200`
+  port: 9200
+  username: "dummy"
+  password: "dummy"
+
+# kubernetes default configurations
+kube:
+  # default kube ingress annotations,
+  # defaults to
+  #  kubernetes.io/ingress.class: nginx
+  #  nginx.ingress.kubernetes.io/client-max-body-size: 500m
+  #  nginx.ingress.kubernetes.io/proxy-body-size: 500m
+  #  nginx.ingress.kubernetes.io/proxy-connect-timeout: 1000s
+  #  nginx.ingress.kubernetes.io/proxy-read-timeout: 1000s
+  #  nginx.ingress.kubernetes.io/proxy-send-timeout: 1000s
+  #  nginx.ingress.kubernetes.io/rewrite-target: /$1
+  #  nginx.org/http2: True
+  ingress_annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/client-max-body-size: 500m
+    nginx.ingress.kubernetes.io/proxy-body-size: 500m
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: 1000s
+    nginx.ingress.kubernetes.io/proxy-read-timeout: 1000s
+    nginx.ingress.kubernetes.io/proxy-send-timeout: 1000s
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    nginx.org/http2: True
+
+  # Ingress host, defaults to k8s-{environment}.synisys.com
+  # Used when creating ingress configurations
+  ingress_host: {{ domain }}
+
+  # Base registry for container images, defaults to "regdb.synisys.com"
+  image_registry_prefix: regdb.synisys.com
+
+  # Docker registry secret's type, defaults to "kubernetes.io/dockerconfigjson"
+  docker_registry_secret_type: "kubernetes.io/dockerconfigjson"
+
+  # Docker registry secret's key name, defaults to "registry.synisys.com"
+  docker_registry_secret_key: registry.synisys.com

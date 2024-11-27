@@ -1,0 +1,53 @@
+---
+- name: Wait for k8s-os.yaml file before continuing
+  ansible.builtin.wait_for:
+    path: "{{ output_path }}/hieradata/roles/k8s-{{ distribution }}.yaml"
+
+- name: Check if rabbit pass generated
+  ansible.builtin.lineinfile:
+    path: "{{ output_path }}/hieradata/roles/k8s-{{ distribution }}.yaml"
+    regexp: rabbit_admin_pass
+    state: absent
+  register: rabbit_generated
+  changed_when: false
+  check_mode: true
+
+- name: Check if redis pass generated
+  ansible.builtin.lineinfile:
+    path: "{{ output_path }}/hieradata/roles/k8s-{{ distribution }}.yaml"
+    regexp: redis_pass
+    state: absent
+  register: redis_generated
+  changed_when: false
+  check_mode: true
+
+- name: Generate rabbitmq admin pass
+  ansible.builtin.script: "{{ role_path }}/lib/hash_generator.py {{ rabbit_admin_password }}"
+  args:
+    executable: /usr/bin/python3
+  register: rabbit_admin_pass_hashed
+  when: not rabbit_generated.found
+
+- name: Generate rabbitmq readonly pass
+  ansible.builtin.script: "{{ role_path }}/lib/hash_generator.py {{ rabbit_readonly_password }}"
+  args:
+    executable: /usr/bin/python3
+  register: rabbit_readonly_pass_hashed
+  when: not rabbit_generated.found
+
+- name: Write rabbit pass's in hiera
+  ansible.builtin.lineinfile:
+    path: "{{ output_path }}/hieradata/roles/k8s-{{ distribution }}.yaml"
+    insertbefore: "BOF"
+    line: "{{ item }}"
+  with_items:
+    - "profile::k8s::k8s_components::rabbit_admin_pass: {{ rabbit_admin_pass_hashed.stdout | trim }}"
+    - "profile::k8s::k8s_components::rabbit_readonly_pass: {{ rabbit_readonly_pass_hashed.stdout | trim }}"
+  when: not rabbit_generated.found
+
+- name: Write redis pass's in hiera
+  ansible.builtin.lineinfile:
+    path: "{{ output_path }}/hieradata/roles/k8s-{{ distribution }}.yaml"
+    insertbefore: "BOF"
+    line: "profile::k8s::k8s_components::redis_pass: {{ redis_password | b64encode }}"
+  when: not redis_generated.found

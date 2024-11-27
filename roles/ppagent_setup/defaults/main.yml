@@ -1,0 +1,7 @@
+---
+environment_name: production
+runinterval: 30m
+puppet_version: "7"
+create_roles: true
+ppmaster_ip: "{{ hostvars[groups['puppet-master'][0]].ansible_default_ipv4.address }}"
+ppmaster_hostname: "{{ hostvars[groups['puppet-master'][0]].ansible_hostname }}"

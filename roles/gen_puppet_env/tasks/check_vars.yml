@@ -1,0 +1,60 @@
+- name: Set output path if puppet-master is local
+  ansible.builtin.set_fact:
+    output_path: "{{ '/opt/puppet/code/environments/production' if 'puppet-master' in groups else '{{ playbook_dir }}/output' }}"
+
+- name: Populate k8s nodes mapping
+  ansible.builtin.set_fact:
+    k8s_nodes: "{{ k8s_nodes | combine({hostvars[item].ansible_hostname: hostvars[item].ansible_default_ipv4.address}) }}"
+  loop: "{{ groups['k8s-master'] }}"
+
+- name: Check mandatory variables are defined
+  ansible.builtin.assert:
+    that:
+      - k8s_virtual_ip | length > 0
+    fail_msg: "Your cluster has {{ k8s_nodes | length }} masters, you should define k8s_virtual_ip {{ k8s_virtual_ip }}"
+  when: k8s_nodes | length > 1
+
+- name: Check if there's nfs-server or nfs-storage
+  ansible.builtin.assert:
+    that:
+      - "nfs_storage_ip is defined or 'nfs-server' in groups"
+    fail_msg: "There is no nfs"
+
+- name: Check if passwords are generated
+  delegate_to: localhost
+  become: false
+  ansible.builtin.stat:
+    path: "{{ playbook_dir }}/passwords.yml"
+  register: passwords_generated
+
+- name: include passwords if exists
+  include_vars: "{{ playbook_dir }}/passwords.yml"
+  when: passwords_generated.stat.exists
+
+- name: Generate main passwords
+  ansible.builtin.set_fact:
+    "{{ item }}": "{{ lookup('ansible.builtin.password', '/dev/null', chars=['ascii_lowercase', 'ascii_uppercase', 'digits']) }}"
+  loop:
+    - rabbit_readonly_password
+    - rabbit_admin_password
+    - redis_password
+    - elastic_password
+  when:
+    - not passwords_generated.stat.exists
+    - autogenerate_passwords | default(true)
+
+- name: Generate openvidu password
+  ansible.builtin.set_fact:
+    openvidu_password: "{{ lookup('ansible.builtin.password', '/dev/null', chars=['ascii_lowercase', 'ascii_uppercase', 'digits']) }}"
+  when:
+    - not passwords_generated.stat.exists
+    - "'openvidu' in groups"
+    - autogenerate_passwords
+
+- name: Write password's
+  delegate_to: localhost
+  become: false
+  ansible.builtin.template:
+    src: passwords.j2
+    dest: "{{ playbook_dir }}/passwords.yml"
+  when: not passwords_generated.stat.exists

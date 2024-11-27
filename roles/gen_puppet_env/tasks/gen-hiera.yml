@@ -1,0 +1,40 @@
+- name: List of groups to skip
+  ansible.builtin.set_fact:
+    groups_to_skip:
+      - k8s-master
+      - k8s-worker
+      - k8s-postgres
+      - monitoring
+      - puppet-master
+      - all
+
+- name: Generate hiera monitoring
+  ansible.builtin.template:
+    src: monitoring.yaml.j2
+    dest: "{{ output_path }}/hieradata/roles/monitoring.yaml"
+
+- name: Generate hiera nginx
+  ansible.builtin.template:
+    src: nginx.yaml.j2
+    dest: "{{ output_path }}/hieradata/roles/nginx.yaml"
+
+- name: Generate hiera os
+  ansible.builtin.template:
+    src: os.yaml.j2
+    dest: "{{ output_path }}/hieradata/os/{{ distribution }}.yaml"
+
+- name: Generate openvidu hiera
+  ansible.builtin.template:
+    src: openvidu.yaml.j2
+    dest: "{{ output_path }}/hieradata/roles/openvidu.yaml"
+  when: "'openvidu' in groups"
+
+- name: Generate k8s_components hiera
+  ansible.builtin.set_fact:
+    k8s_components: "{{ lookup('template', 'k8s_components.yaml.j2') }}"
+
+- name: Append to k8s-os.yaml
+  ansible.builtin.blockinfile:
+    path: "{{ output_path }}/hieradata/roles/k8s-{{ distribution }}.yaml"
+    block: "{{ k8s_components }}"
+    insertbefore: "BOF"

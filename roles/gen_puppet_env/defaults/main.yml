@@ -1,0 +1,64 @@
+k8s_nodes: []
+k8s_virtual_ip: []
+k8s_pods_cidr: 192.168.0.0/16
+
+
+domain: trainging.synisys.com
+environment_name: test
+
+registry_username: username
+registry_password: password
+# PV SIZES DEFAULTS
+applogs_pv_size: 100
+documentservice_pv_size: 20
+userdataservice_pv_size: 3
+elasticseasrch_pv_size: 50
+exportservice_pv_size: 10
+pageservice_pv_size: 5
+rabbitmq_pv_size: 20
+redis_pv_size: 20
+minio_pv_size: 20
+consul_pv_size: 10
+vault_pv_size: 10
+
+# VAULT / CONSUL
+install_consul: false
+install_vault: true
+
+# MONITORING
+grafana_version: '8.3.3'
+elk_version: '8.1.2'
+logstash_version: '7.17.2'
+prometheus_version: 'v2.43.0'
+cadvisor_version: 'v0.43.0'
+elasticsearch_exporter_version: 'v1.5.0'
+nginx_prom_exporter_version: '1.0.15'
+node_exporter_version: '1.3.1'
+consul_exporter_version: 'v1'
+elastic_password: ChangeMe
+
+# OS
+second_disk_path: "/data"
+timezone: "Asia/Yerevan"
+
+# OPENVIDU
+openvidu_version: '2.18.0'
+openvidu_recording_version: '2.18.3'
+openvidu_domain: domain.com
+openvidu_password: ChangeMe
+
+# POSTGRES
+postgres_version: 10
+postgres_pv_size: 10
+postgres_dir: postgresql
+postgres_image: registry.synisys.com/database/postgres1023-33:1.0.1
+postgres_exporter_image: registry.synisys.com/database/postgres_exporter_10:1.0.0
+postgres_exporter_password: ChangeMe
+postgres_vault_password: ChangeMe
+postgres_job_password: ChangeMe
+postgres_password: ChangeMe
+
+#
+rabbit_readonly_pass: ChangeMe
+rabbit_admin_pass: ChangeMe
+redis_pass: ChangeMe

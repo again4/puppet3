@@ -1,0 +1,60 @@
+### PUPPET MASTER/AGENT CONFIGS
+# runinterval: 30m                   # Agents run interval
+environment_name: test
+
+### OS
+# Timezone for vm's
+# https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+
+timezone: Asia/Yerevan
+
+### NFS
+# Leave commented if you have nfs-server
+# If you use nfs-storage - don't define in nfs in hosts file and write address here
+
+#nfs_storage_ip: 1.1.1.1
+
+### PODS SUBNET
+# If it overlaps with your vm subnet - change it
+
+#k8s_pods_cidr: 192.168.0.0/16
+
+### If you use multi-master k8s pick unused ip from your subnet
+
+#k8s_virtual_ip:
+
+### Domain for IDM application
+domain: trainging.synisys.com
+
+### Domain for openvidu application
+### If there is no host for openvidu in hosts.yaml file - can be commented
+#openvidu_domain: domain.com
+
+### Registry credentials for docker images
+registry_username: username
+registry_password: password
+
+### VAULT / CONSUL
+### Whether your project needs consul or vault
+install_consul: false
+install_vault: true
+
+### PV SIZES in Gb's
+applogs_pv_size: 100
+documentservice_pv_size: 20
+userdataservice_pv_size: 3
+elasticseasrch_pv_size: 50
+exportservice_pv_size: 10
+pageservice_pv_size: 5
+rabbitmq_pv_size: 20
+redis_pv_size: 20
+minio_pv_size: 20
+consul_pv_size: 10
+vault_pv_size: 10
+
+### Passwords
+autogenerate_passwords: true
+#rabbit_readonly_password: 
+#rabbit_admin_password: 
+#redis_password: 
+#elastic_password: 

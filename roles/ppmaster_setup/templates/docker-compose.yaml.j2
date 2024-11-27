@@ -1,0 +1,65 @@
+version: '3'
+services:
+  puppet:
+    container_name: puppet
+    hostname: {{ ansible_hostname }}
+    image: puppet/puppetserver:7.9.2
+    restart: unless-stopped
+    privileged: true
+    ports:
+      - "8140:8140"
+    environment:
+      - PUPPETSERVER_HOSTNAME={{ ansible_hostname }}
+      - PUPPERWARE_ANALYTICS_ENABLED=${PUPPERWARE_ANALYTICS_ENABLED:-false}
+      - PUPPETDB_SERVER_URLS=https://puppetdb:8081
+      - PUPPETSERVER_MAX_ACTIVE_INSTANCES=1
+    volumes:
+      - /opt/puppet/code:/etc/puppetlabs/code
+      - /opt/puppet/ssl:/etc/puppetlabs/puppet/ssl
+      - /opt/puppet/ca:/etc/puppetlabs/puppetserver/ca
+      - /opt/puppet/serverdata:/opt/puppetlabs/server/data/puppetserver
+  postgres:
+    container_name: postgres
+    image: postgres:9.6
+    restart: unless-stopped
+    environment:
+      - POSTGRES_PASSWORD=puppetdb
+      - POSTGRES_USER=puppetdb
+      - POSTGRES_DB=puppetdb
+    ports:
+        - "5432:5432"
+    volumes:
+      - /opt/puppet/puppetdb-postgres/data:/var/lib/postgresql/data
+      - ./postgres-custom:/docker-entrypoint-initdb.d
+  puppetdb:
+    container_name: puppetdb
+    hostname: puppetdb
+    image: puppet/puppetdb:7.10.0
+    restart: unless-stopped
+    environment:
+      - PUPPERWARE_ANALYTICS_ENABLED=${PUPPERWARE_ANALYTICS_ENABLED:-false}
+      - PUPPETSERVER_HOSTNAME={{ ansible_hostname }}
+      - PUPPETDB_POSTGRES_HOSTNAME=postgres
+      - PUPPETDB_PASSWORD=puppetdb
+      - PUPPETDB_USER=puppetdb
+    ports:
+      - "8082:8080"
+      - "8081:8081"
+    depends_on:
+      - postgres
+      - puppet
+    volumes:
+      - /opt/puppet/puppetdb/ssl:/opt/puppetlabs/server/data/puppetdb/certs
+  puppetboard:
+    container_name: puppetboard
+    hostname: puppetboard.${DOMAIN:-internal}
+    image: ghcr.io/voxpupuli/puppetboard:5.0.0
+    restart: unless-stopped
+    privileged: true
+    ports:
+      - "88:80"
+    environment:
+      - PUPPETDB_HOST=puppetdb
+      - PUPPETDB_PORT=8080
+      - PUPPETBOARD_PORT=80
+      - SECRET_KEY=JTiBSU0EgUFJJVkFURSBLRVktLS0tLQouLi4KLS0t

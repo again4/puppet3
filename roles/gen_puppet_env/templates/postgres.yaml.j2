@@ -1,0 +1,58 @@
+profile::k8s::postgres::version: {{ postgres_version }}
+profile::k8s::postgres::pv_size: {{ postgres_pv_size }}
+profile::k8s::postgres::postgres_dir: {{ postgres_dir }}
+profile::k8s::postgres::postgres_image: {{ postgres_image }}
+profile::k8s::postgres::exporter_image: {{ postgres_exporter_image }}
+profile::k8s::postgres::postgres_password: {{ postgres_password | b64encode }}
+profile::k8s::postgres::exporter_password: {{ postgres_exporter_password | b64encode }}
+profile::k8s::postgres::vault_password: {{ postgres_vault_password | b64encode }}
+profile::k8s::postgres::job_password: {{ postgres_job_password | b64encode }}
+{% set total_mem = hostvars[groups['k8s-postgres'][0]].ansible_memtotal_mb | int %}
+{% set total_vcpu = hostvars[groups['k8s-postgres'][0]].ansible_processor_vcpus %}
+profile::k8s::postgres::local_conf: |
+  max_connections = 1000
+  shared_buffers = {{ (total_mem * 0.25) | int }}MB
+  effective_cache_size = {{ (total_mem * 0.5) | int }}MB
+{% if total_mem >= 32000  %}
+  maintenance_work_mem = 2GB
+{% else %}
+  maintenance_work_mem = {{ (total_mem / 16) | int }}MB
+{% endif %}
+  checkpoint_completion_target = 0.9
+  wal_buffers = 16MB
+  default_statistics_target = 100
+  random_page_cost = 1.1
+  effective_io_concurrency = 200
+  work_mem = {{ (total_mem * 1024 * 0.125 / 1000) | int }}kB
+  min_wal_size = 512GB
+  max_wal_size = 1GB
+{% if total_vcpu > 4 %}
+{% if total_vcpu >= 5 and total_vcpu <= 8 %}
+{% set workers_count = 2 %}
+{% elif total_vcpu >= 9 and total_vcpu <= 15 %}
+{% set workers_count = 3 %}
+{% else %}
+{% set workers_count = 4 %}
+{% endif %}
+  max_worker_processes = {{ total_vcpu }}
+  max_parallel_workers_per_gather = {{ workers_count }}
+  max_parallel_maintenance_workers = {{ workers_count }}
+{% if total_vcpu > 10 %}
+  max_parallel_workers  = {{ total_vcpu | int - 2 }}
+{% else %}
+  max_parallel_workers  = {{ total_vcpu | int - 4 }}
+{% endif %}
+{% endif %}
+profile::k8s::postgres::pg_hba_conf: |
+  local all  all  peer  map=map
+  host  all  all  127.0.0.1/32  scram-sha-256
+  host  all  admin   192.168.0.1/16  scram-sha-256
+  host  all  postgres_jobs  192.168.0.1/16  scram-sha-256
+  host  all  postgres_exporter  192.168.0.1/16  scram-sha-256
+  host  all  roleadmin  192.168.0.1/16  scram-sha-256
+  host  all  all  192.168.0.1/16  scram-sha-256
+profile::k8s::postgres::resources:
+  cpu_req: {{ total_vcpu }}
+  cpu_lim: {{ total_vcpu }}
+  mem_req: {{ (total_mem / 1024) | int }}
+  mem_lim: {{ (total_mem / 1024) | int }}

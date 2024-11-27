@@ -1,0 +1,21 @@
+---
+- name: Update cache
+  ansible.builtin.apt:
+    update_cache: true
+    force_apt_get: true
+
+- name: "Install Repo for Puppet {{ puppet_version }}"
+  ansible.builtin.apt:
+    deb: "{{ puppet_release }}"
+    state: present
+  notify:
+    - Update cache
+
+- name: "Install Puppet Agent {{ puppet_version }}"
+  become: true
+  ansible.builtin.apt:
+    name: "{{ puppet_packages }}"
+    state: present
+    update_cache: true
+  notify:
+    - Update cache

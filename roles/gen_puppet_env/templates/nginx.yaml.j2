@@ -1,0 +1,8 @@
+profile::nginx::install::upstream_ips:
+{% for host in groups['k8s-master'] %}
+- {{ host }}
+{% endfor %}
+{% for host in groups['k8s-worker'] %}
+- {{ host }}
+{% endfor %}
+profile::nginx::install::domain: {{ domain }}

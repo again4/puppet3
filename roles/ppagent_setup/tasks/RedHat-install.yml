@@ -1,0 +1,11 @@
+---
+- name: "Install Repo for Puppet {{ puppet_version }}"
+  ansible.builtin.yum:
+    name: "{{ puppet_release }}"
+    state: present
+    disable_gpg_check: true
+
+- name: "Install Puppet Agent {{ puppet_version }}"
+  ansible.builtin.yum:
+    name: "{{ puppet_packages }}"
+    state: present
