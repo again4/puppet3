@@ -34,15 +34,15 @@ docker_proxy_env:
 
 # docker client configuration --------------------------------------------------
 ## enable authentication for docker registry
-docker_client_config_enabled: false
+docker_client_config_enabled: true
 ## the location we should push client configuration
 docker_client_config_location: "/root/.docker/config.json"
 # for auth (docker login) use something like:
-#docker_client_config:
-#  auths:
-#    "https://test.tld:1234":
-#      auth: "SOME_STRING"
-#      email: "SOME_EMAIL"
+docker_client_config:
+  auths:
+    "https://gitlab2.tymchenko.local:5050":
+      auth: "eXVyYTp5dXJheXVyYQ=="
+
 
 # default dockerd configuration options ----------------------------------------
 ## https://docs.docker.com/engine/reference/commandline/dockerd/#/linux-configuration-file

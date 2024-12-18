@@ -1,13 +1,14 @@
 k8s_nodes: []
-k8s_virtual_ip: []
+k8s_virtual_ip: 10.255.205.8
 k8s_pods_cidr: 192.168.0.0/16
 
 
 domain: trainging.synisys.com
 environment_name: test
 
-registry_username: username
-registry_password: password
+registry_domain: gitlab2.tymchenko.local:5050
+registry_username: yura
+registry_password: yurayura
 # PV SIZES DEFAULTS
 applogs_pv_size: 100
 documentservice_pv_size: 20
@@ -62,3 +63,4 @@ postgres_password: ChangeMe
 rabbit_readonly_pass: ChangeMe
 rabbit_admin_pass: ChangeMe
 redis_pass: ChangeMe
+docker_registry: "gitlab2.tymchenko.local:5050"

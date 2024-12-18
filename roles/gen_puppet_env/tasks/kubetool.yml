@@ -21,7 +21,7 @@
 - name: Generate kube certs
   community.docker.docker_container:
     name: kubetool
-    image: registry.synisys.com/infrastructure/kubetool:8.0.7
+    image: "{{ docker_registry }}/yura/infrustructure/kubetool:8.0.7"
     env_file: "/tmp/env"
     auto_remove: true
     volumes:

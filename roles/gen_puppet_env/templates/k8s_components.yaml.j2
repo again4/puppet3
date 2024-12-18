@@ -35,6 +35,7 @@ profile::k8s::k8s_components::install_vault: {{ install_vault }}
 profile::k8s::k8s_components::install_rabbit_redis_exporter: true
 profile::k8s::k8s_components::install_postgres: false
 #####################################################################
+profile::k8s::k8s_components::registry_domain: {{ registry_domain }}
 profile::k8s::k8s_components::registry_username: {{ registry_username }}
 profile::k8s::k8s_components::registry_password: {{ registry_password }}
 {% if k8s_nodes | length > 1 %}
